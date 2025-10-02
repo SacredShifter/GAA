@@ -38,6 +38,8 @@ export { ImmersiveVisuals } from './components/ImmersiveVisuals';
 
 export { VisionModal } from './components/VisionModal';
 
+export { AboutModal } from './components/AboutModal';
+
 export { ThresholdNotification } from './components/ThresholdNotification';
 
 export { usePerformanceQuality } from './hooks/usePerformanceQuality';
