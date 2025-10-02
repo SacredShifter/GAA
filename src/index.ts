@@ -28,11 +28,18 @@ export type {
 export { EnhancedVisuals } from './components/EnhancedVisuals';
 export type { GeometryMode } from './components/EnhancedVisuals';
 
+export { EnhancedVisualsV2 } from './components/EnhancedVisualsV2';
+
 export { VisualMap } from './components/VisualMap';
 
 export { AnalyticsDashboard } from './components/AnalyticsDashboard';
 
 export { ImmersiveVisuals } from './components/ImmersiveVisuals';
+
+export { usePerformanceQuality } from './hooks/usePerformanceQuality';
+
+export { performanceDetector } from './utils/performanceDetector';
+export type { QualityLevel, QualitySettings, DeviceCapabilities } from './utils/performanceDetector';
 
 export { GaaModuleWrapper, getModuleManifest, getExposedItems } from './integrations/GaaModuleWrapper';
 export type {
