@@ -125,3 +125,17 @@ export type {
   SessionPattern,
   HistoricalSession,
 } from './utils/aiJourneyOrchestrator';
+
+export { ValidationFramework, globalValidationFramework } from './utils/validationFramework';
+export type {
+  ValidationMetrics,
+  ValidationResult,
+  BiometricAccuracyTest,
+  SynchronizationTest,
+  AIPredictionTest,
+  VotingValidationTest,
+  UnverifiableClaim,
+} from './utils/validationFramework';
+
+export { ValidationReport } from './components/ValidationReport';
+export type { ValidationReportProps } from './components/ValidationReport';
