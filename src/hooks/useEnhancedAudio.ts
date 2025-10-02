@@ -223,6 +223,28 @@ export const useEnhancedAudio = () => {
     }
   }, [state.isPlaying, state.frequency]);
 
+  const updateWaveType = useCallback((waveType: WaveType) => {
+    setState(prev => ({ ...prev, waveType }));
+
+    if (state.isPlaying) {
+      stopAllOscillators();
+      setTimeout(() => {
+        startBinauralBeats(state.frequency, state.binauralBeat, state.intensity, waveType);
+      }, 10);
+    }
+  }, [state.isPlaying, state.frequency, state.binauralBeat, state.intensity, stopAllOscillators, startBinauralBeats]);
+
+  const updateMode = useCallback((mode: AudioMode) => {
+    setState(prev => ({ ...prev, mode }));
+
+    if (state.isPlaying) {
+      stopAllOscillators();
+      setTimeout(() => {
+        startBinauralBeats(state.frequency, state.binauralBeat, state.intensity, state.waveType);
+      }, 10);
+    }
+  }, [state.isPlaying, state.frequency, state.binauralBeat, state.intensity, state.waveType, stopAllOscillators, startBinauralBeats]);
+
   const getSpectrumData = useCallback((): SpectrumData => {
     if (!analyserRef.current) {
       return {
@@ -306,6 +328,8 @@ export const useEnhancedAudio = () => {
     updateFrequency,
     updateIntensity,
     updateBinauralBeat,
+    updateWaveType,
+    updateMode,
     getSpectrumData,
     getActualFrequencies,
   };

@@ -107,6 +107,12 @@ export const useGAA = (options: UseGAAOptions = {}) => {
     if (config.binauralBeat !== undefined) {
       audio.updateBinauralBeat(config.binauralBeat);
     }
+    if (config.waveType !== undefined) {
+      audio.updateWaveType(config.waveType);
+    }
+    if (config.audioMode !== undefined) {
+      audio.updateMode(config.audioMode);
+    }
     if (config.pulseSpeed !== undefined) {
       setPulseSpeed(config.pulseSpeed);
     }
