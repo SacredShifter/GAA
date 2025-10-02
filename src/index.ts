@@ -139,3 +139,5 @@ export type {
 
 export { ValidationReport } from './components/ValidationReport';
 export type { ValidationReportProps } from './components/ValidationReport';
+
+export { runCompleteValidation, generateValidationCharts, exportValidationPDF } from './utils/runValidation';
