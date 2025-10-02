@@ -1,8 +1,14 @@
 export { GAA } from './components/GAA';
 export type { GAAProps } from './components/GAA';
 
+export { PrecisionGAA } from './components/PrecisionGAA';
+export type { PrecisionGAAProps } from './components/PrecisionGAA';
+
 export { useGAA } from './hooks/useGAA';
 export type { UseGAAOptions, UseGAAReturn, GAAState, GAAConfig } from './hooks/useGAA';
+
+export { usePrecisionSync } from './hooks/usePrecisionSync';
+export type { PrecisionSyncState, UsePrecisionSyncOptions } from './hooks/usePrecisionSync';
 
 export { useEnhancedAudio } from './hooks/useEnhancedAudio';
 export type { AudioEngineState, WaveType, AudioMode, SpectrumData } from './hooks/useEnhancedAudio';
@@ -44,10 +50,29 @@ export { AudioCalibration } from './components/AudioCalibration';
 
 export { ThresholdNotification } from './components/ThresholdNotification';
 
+export { SyncQualityIndicator } from './components/SyncQualityIndicator';
+
+export { SafetyWarningModal } from './components/SafetyWarningModal';
+
 export { usePerformanceQuality } from './hooks/usePerformanceQuality';
 
 export { performanceDetector } from './utils/performanceDetector';
 export type { QualityLevel, QualitySettings, DeviceCapabilities } from './utils/performanceDetector';
+
+export { ClockSyncManager, calibrateClock, serverEpochToContextTime, contextTimeToServerEpoch } from './utils/clockSync';
+export type { ClockSyncResult, TimingMeasurement } from './utils/clockSync';
+
+export { TempoGrid, calculateSweepFactor, createSyncConfigMessage, createBarMarkMessage, createHeartbeatMessage } from './utils/syncProtocol';
+export type { SyncConfig, BarMark, SyncMessage } from './utils/syncProtocol';
+
+export { PrecisionAudioEngine } from './utils/precisionAudioEngine';
+export type { PrecisionAudioEngineConfig } from './utils/precisionAudioEngine';
+
+export { SafetyMonitor, createHeadphoneWarningMessage, shouldShowBinauralRestriction, DEFAULT_SAFETY_CONFIG } from './utils/safetyMonitor';
+export type { SafetyConfig, SafetyWarning } from './utils/safetyMonitor';
+
+export { GEOMETRIC_PACKS, BASE_FREQUENCIES, calculateHarmonicStack, getGeometricPackByShape, centsToFrequencyRatio, frequencyRatioToCents } from './utils/geometricFrequencies';
+export type { GeometricFrequencyPack } from './utils/geometricFrequencies';
 
 export { GaaModuleWrapper, getModuleManifest, getExposedItems } from './integrations/GaaModuleWrapper';
 export type {

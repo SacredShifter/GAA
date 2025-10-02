@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Info } from 'lucide-react';
-import { GAA } from './components/GAA';
+import { PrecisionGAA } from './components/PrecisionGAA';
 import { AboutModal } from './components/AboutModal';
 
 function App() {
@@ -14,28 +14,12 @@ function App() {
     }
   }, []);
 
-  const handleResonanceChange = (state: any) => {
-    console.log('Resonance state changed:', state);
-  };
-
-  const handleSync = () => {
-    console.log('User opened Collective Sync modal');
-  };
-
   return (
     <>
-      <GAA
-        enableSync={true}
+      <PrecisionGAA
+        userId="demo-user"
         theme="dark"
         showControls={true}
-        onResonanceChange={handleResonanceChange}
-        onSync={handleSync}
-        initialConfig={{
-          frequency: 432,
-          intensity: 0.5,
-          pulseSpeed: 1,
-          geometryMode: 'waves',
-        }}
       />
 
       <button
