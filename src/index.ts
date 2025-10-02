@@ -36,6 +36,10 @@ export { AnalyticsDashboard } from './components/AnalyticsDashboard';
 
 export { ImmersiveVisuals } from './components/ImmersiveVisuals';
 
+export { VisionModal } from './components/VisionModal';
+
+export { ThresholdNotification } from './components/ThresholdNotification';
+
 export { usePerformanceQuality } from './hooks/usePerformanceQuality';
 
 export { performanceDetector } from './utils/performanceDetector';

@@ -12,6 +12,7 @@ import {
   Hexagon,
   Sparkles,
   Shield,
+  Eye,
 } from 'lucide-react';
 import type { GAAState, GAAConfig } from '../hooks/useGAA';
 import type { SyncState } from '../hooks/useSync';
@@ -29,6 +30,7 @@ interface GAAControlsProps {
   onCollectiveSync: () => void;
   onOpenPresets: () => void;
   onOpenHelp: () => void;
+  onOpenVision: () => void;
   theme: 'dark' | 'light';
 }
 
@@ -62,6 +64,7 @@ export const GAAControls: React.FC<GAAControlsProps> = ({
   onCollectiveSync,
   onOpenPresets,
   onOpenHelp,
+  onOpenVision,
   theme,
 }) => {
   const [showAdvanced, setShowAdvanced] = useState(false);
@@ -83,6 +86,13 @@ export const GAAControls: React.FC<GAAControlsProps> = ({
       <div className="flex items-center justify-between mb-6">
         <h2 className={`text-2xl font-bold ${textClass}`}>GAA Control</h2>
         <div className="flex gap-2">
+          <button
+            onClick={onOpenVision}
+            className="p-2 rounded-lg hover:bg-white/10 transition-colors"
+            title="The Vision"
+          >
+            <Eye className={`w-5 h-5 text-cyan-400`} />
+          </button>
           <button
             onClick={onOpenHelp}
             className="p-2 rounded-lg hover:bg-white/10 transition-colors"

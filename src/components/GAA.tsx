@@ -6,6 +6,8 @@ import { GAAControls } from './GAAControls';
 import { CollectiveSyncModal } from './CollectiveSyncModal';
 import { PresetsModal } from './PresetsModal';
 import { HelpModal } from './HelpModal';
+import { VisionModal } from './VisionModal';
+import { ThresholdNotification } from './ThresholdNotification';
 
 export interface GAAProps extends UseGAAOptions {
   theme?: 'dark' | 'light';
@@ -34,6 +36,7 @@ export const GAA: React.FC<GAAProps> = ({
   const [showSyncModal, setShowSyncModal] = useState(false);
   const [showPresetsModal, setShowPresetsModal] = useState(false);
   const [showHelpModal, setShowHelpModal] = useState(false);
+  const [showVisionModal, setShowVisionModal] = useState(false);
 
   const geometryModes: GeometryMode[] = ['waves', 'lattice', 'sacredGeometry', 'particles', 'dome'];
   const currentGeometryIndex = geometryModes.indexOf(gaa.state.geometryMode);
@@ -110,6 +113,7 @@ export const GAA: React.FC<GAAProps> = ({
           onCollectiveSync={handleCollectiveSync}
           onOpenPresets={() => setShowPresetsModal(true)}
           onOpenHelp={() => setShowHelpModal(true)}
+          onOpenVision={() => setShowVisionModal(true)}
           theme={theme}
         />
       )}
@@ -138,6 +142,19 @@ export const GAA: React.FC<GAAProps> = ({
         onClose={() => setShowHelpModal(false)}
         theme={theme}
       />
+
+      <VisionModal
+        isOpen={showVisionModal}
+        onClose={() => setShowVisionModal(false)}
+        theme={theme}
+      />
+
+      {gaa.sync && gaa.sync.isConnected && (
+        <ThresholdNotification
+          userCount={gaa.sync.totalUsers}
+          theme={theme}
+        />
+      )}
     </div>
   );
 };
