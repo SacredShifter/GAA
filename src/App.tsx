@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Info, Sparkles } from 'lucide-react';
+import { Info, Sparkles, Network } from 'lucide-react';
 import { PrecisionGAA } from './components/PrecisionGAA';
 import { EgyptianCodeGAA } from './components/EgyptianCodeGAA';
+import { CollectiveConsciousnessField } from './components/CollectiveConsciousnessField';
 import { AboutModal } from './components/AboutModal';
 
-type ExperienceMode = 'precision' | 'egyptian';
+type ExperienceMode = 'precision' | 'egyptian' | 'collective';
 
 function App() {
   const [showAbout, setShowAbout] = useState(false);
-  const [mode, setMode] = useState<ExperienceMode>('precision');
+  const [mode, setMode] = useState<ExperienceMode>('collective');
 
   useEffect(() => {
     const hasSeenWelcome = localStorage.getItem('gaa-welcome-seen');
@@ -18,9 +19,33 @@ function App() {
     }
   }, []);
 
+  const cycleModes = () => {
+    if (mode === 'collective') setMode('precision');
+    else if (mode === 'precision') setMode('egyptian');
+    else setMode('collective');
+  };
+
+  const getModeLabel = () => {
+    if (mode === 'collective') return 'Precision GAA';
+    if (mode === 'precision') return 'Egyptian Code';
+    return 'Collective Field';
+  };
+
+  const getModeIcon = () => {
+    if (mode === 'collective') return <Sparkles className="w-5 h-5 text-purple-400 group-hover:scale-110 transition-transform" />;
+    if (mode === 'precision') return <Network className="w-5 h-5 text-cyan-400 group-hover:scale-110 transition-transform" />;
+    return <Sparkles className="w-5 h-5 text-purple-400 group-hover:scale-110 transition-transform" />;
+  };
+
   return (
     <>
-      {mode === 'precision' ? (
+      {mode === 'collective' ? (
+        <CollectiveConsciousnessField
+          userId="demo-user"
+          theme="dark"
+          showControls={true}
+        />
+      ) : mode === 'precision' ? (
         <PrecisionGAA
           userId="demo-user"
           theme="dark"
@@ -44,14 +69,14 @@ function App() {
         </button>
 
         <button
-          onClick={() => setMode(mode === 'precision' ? 'egyptian' : 'precision')}
+          onClick={cycleModes}
           className="px-4 py-3 bg-slate-900/95 backdrop-blur-lg border border-purple-500/30 rounded-xl shadow-2xl hover:bg-slate-800 transition-all group flex items-center gap-2"
-          title={mode === 'precision' ? 'Switch to Egyptian Code' : 'Switch to Precision GAA'}
+          title={`Switch to ${getModeLabel()}`}
           aria-label="Switch mode"
         >
-          <Sparkles className="w-5 h-5 text-purple-400 group-hover:scale-110 transition-transform" />
+          {getModeIcon()}
           <span className="text-sm font-medium text-purple-300">
-            {mode === 'precision' ? 'Egyptian Code' : 'Precision GAA'}
+            {getModeLabel()}
           </span>
         </button>
       </div>

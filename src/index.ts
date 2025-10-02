@@ -94,3 +94,34 @@ export type {
   CodexStreamEntry,
   GaaModuleWrapperProps,
 } from './integrations/GaaModuleWrapper';
+
+export { CollectiveConsciousnessField } from './components/CollectiveConsciousnessField';
+export type { CollectiveConsciousnessFieldProps } from './components/CollectiveConsciousnessField';
+
+export { SpacetimeFieldVisualization } from './components/SpacetimeFieldVisualization';
+export type { SpacetimeFieldVisualizationProps } from './components/SpacetimeFieldVisualization';
+
+export { useCollectiveConsciousness } from './hooks/useCollectiveConsciousness';
+export type {
+  CollectiveConsciousnessState,
+  UseCollectiveConsciousnessOptions,
+  UseCollectiveConsciousnessReturn,
+} from './hooks/useCollectiveConsciousness';
+
+export { BiometricMonitor } from './utils/biometricMonitor';
+export type { BiometricReading, PPGSignal } from './utils/biometricMonitor';
+
+export { QuantumCoherenceEngine } from './utils/quantumCoherenceEngine';
+export type {
+  QuantumState,
+  Complex,
+  EntanglementPair,
+  CollectiveWaveFunction,
+} from './utils/quantumCoherenceEngine';
+
+export { AIJourneyOrchestrator } from './utils/aiJourneyOrchestrator';
+export type {
+  AIInsight,
+  SessionPattern,
+  HistoricalSession,
+} from './utils/aiJourneyOrchestrator';
