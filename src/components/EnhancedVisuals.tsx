@@ -32,6 +32,17 @@ export const EnhancedVisuals: React.FC<EnhancedVisualsProps> = ({
   const objectsRef = useRef<THREE.Object3D[]>([]);
   const timeRef = useRef(0);
   const particlesRef = useRef<THREE.Points | null>(null);
+  const frequencyRef = useRef(frequency);
+  const intensityRef = useRef(intensity);
+  const pulseSpeedRef = useRef(pulseSpeed);
+  const isPlayingRef = useRef(isPlaying);
+
+  useEffect(() => {
+    frequencyRef.current = frequency;
+    intensityRef.current = intensity;
+    pulseSpeedRef.current = pulseSpeed;
+    isPlayingRef.current = isPlaying;
+  }, [frequency, intensity, pulseSpeed, isPlaying]);
 
   const createWavesGeometry = useCallback((scene: THREE.Scene) => {
     const objects: THREE.Object3D[] = [];
@@ -259,34 +270,47 @@ export const EnhancedVisuals: React.FC<EnhancedVisualsProps> = ({
     const animate = () => {
       if (!sceneRef.current || !cameraRef.current || !rendererRef.current) return;
 
-      timeRef.current += 0.01 * pulseSpeed;
+      const currentFrequency = frequencyRef.current;
+      const currentIntensity = intensityRef.current;
+      const currentPulseSpeed = pulseSpeedRef.current;
+      const currentIsPlaying = isPlayingRef.current;
+
+      timeRef.current += 0.01 * currentPulseSpeed;
 
       const spectrumData = getSpectrumData();
       const normalizedAmplitude = spectrumData.averageEnergy;
 
       if (geometryMode === 'particles' && particlesRef.current) {
         const positions = particlesRef.current.geometry.attributes.position.array as Float32Array;
+        const colors = particlesRef.current.geometry.attributes.color.array as Float32Array;
         for (let i = 0; i < positions.length; i += 3) {
           const distance = Math.sqrt(
             positions[i] ** 2 + positions[i + 1] ** 2 + positions[i + 2] ** 2
           );
-          const wave = Math.sin(distance - timeRef.current * 2) * normalizedAmplitude * 2;
-          const scale = 1 + wave * 0.5;
+          const wave = Math.sin(distance * (currentFrequency / 200) - timeRef.current * 2) * normalizedAmplitude * 2;
+          const scale = 1 + wave * 0.5 * currentIntensity;
           positions[i] *= scale / (scale - wave * 0.5);
           positions[i + 1] *= scale / (scale - wave * 0.5);
           positions[i + 2] *= scale / (scale - wave * 0.5);
+
+          const hue = ((currentFrequency - 20) / 1980 + (i / positions.length)) % 1;
+          const color = new THREE.Color().setHSL(hue, 0.8, 0.5 + normalizedAmplitude * 0.3);
+          colors[i] = color.r;
+          colors[i + 1] = color.g;
+          colors[i + 2] = color.b;
         }
         particlesRef.current.geometry.attributes.position.needsUpdate = true;
-        particlesRef.current.rotation.y += 0.001 * pulseSpeed;
+        particlesRef.current.geometry.attributes.color.needsUpdate = true;
+        particlesRef.current.rotation.y += 0.001 * currentPulseSpeed;
       }
 
       objectsRef.current.forEach((obj, i) => {
         if (geometryMode === 'waves') {
-          const scale = 1 + Math.sin(timeRef.current - i * 0.3) * 0.1 * intensity;
-          const amplitudeScale = isPlaying ? 1 + normalizedAmplitude * 0.5 : 1;
+          const scale = 1 + Math.sin(timeRef.current - i * 0.3) * 0.1 * currentIntensity;
+          const amplitudeScale = currentIsPlaying ? 1 + normalizedAmplitude * 0.5 : 1;
           obj.scale.set(scale * amplitudeScale, scale * amplitudeScale, 1);
 
-          const hue = (0.6 + (frequency - 400) / 1000) % 1;
+          const hue = (0.6 + (currentFrequency - 400) / 1000) % 1;
           if (obj instanceof THREE.Mesh) {
             const material = obj.material as THREE.MeshBasicMaterial;
             material.color.setHSL(hue, 0.8, 0.5 + normalizedAmplitude * 0.3);
@@ -297,20 +321,31 @@ export const EnhancedVisuals: React.FC<EnhancedVisualsProps> = ({
           if (obj instanceof THREE.Line) {
             const positions = obj.geometry.attributes.position.array as Float32Array;
             for (let j = 0; j < positions.length; j += 3) {
-              const wave = Math.sin(positions[j] + positions[j + 1] + timeRef.current) * normalizedAmplitude;
-              positions[j + 2] = wave * 2;
+              const wave = Math.sin(positions[j] + positions[j + 1] + timeRef.current * (currentFrequency / 400)) * normalizedAmplitude;
+              positions[j + 2] = wave * 2 * currentIntensity;
             }
             obj.geometry.attributes.position.needsUpdate = true;
+
+            if (obj.material instanceof THREE.LineBasicMaterial) {
+              const hue = (0.6 + (currentFrequency - 400) / 1000) % 1;
+              obj.material.color.setHSL(hue, 0.8, 0.6);
+            }
           }
         } else if (geometryMode === 'sacredGeometry') {
-          const scale = 1 + Math.sin(timeRef.current + i) * 0.1 * intensity + normalizedAmplitude * 0.3;
+          const scale = 1 + Math.sin(timeRef.current + i) * 0.1 * currentIntensity + normalizedAmplitude * 0.3;
           obj.scale.set(scale, scale, scale);
-          obj.rotation.z += 0.005 * pulseSpeed;
-        } else if (geometryMode === 'dome') {
-          obj.rotation.y += 0.002 * pulseSpeed;
+          obj.rotation.z += 0.005 * currentPulseSpeed;
+
           if (obj instanceof THREE.Mesh) {
             const material = obj.material as THREE.MeshBasicMaterial;
-            const hue = (0.6 + (frequency - 400) / 1000) % 1;
+            const hue = (i / 7 + (currentFrequency - 400) / 2000) % 1;
+            material.color.setHSL(hue, 0.8, 0.5 + normalizedAmplitude * 0.2);
+          }
+        } else if (geometryMode === 'dome') {
+          obj.rotation.y += 0.002 * currentPulseSpeed;
+          if (obj instanceof THREE.Mesh) {
+            const material = obj.material as THREE.MeshBasicMaterial;
+            const hue = (0.6 + (currentFrequency - 400) / 1000) % 1;
             material.color.setHSL(hue, 0.8, 0.5 + normalizedAmplitude * 0.2);
           }
         }
@@ -332,7 +367,7 @@ export const EnhancedVisuals: React.FC<EnhancedVisualsProps> = ({
       controlsRef.current?.dispose();
       renderer.dispose();
     };
-  }, []);
+  }, [enableOrbitControls, clearScene, getSpectrumData, geometryMode]);
 
   useEffect(() => {
     if (!sceneRef.current) return;
