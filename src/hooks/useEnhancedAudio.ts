@@ -17,31 +17,31 @@ export interface AudioEngineState {
 }
 
 export interface SpectrumData {
-  frequencies: Uint8Array;
-  timeDomain: Uint8Array;
+  frequencyData: Uint8Array;
   averageEnergy: number;
   peakFrequency: number;
+  bassEnergy: number;
+  midEnergy: number;
+  trebleEnergy: number;
 }
 
 export const useEnhancedAudio = () => {
   const audioContextRef = useRef<AudioContext | null>(null);
-  const mainOscillatorRef = useRef<OscillatorNode | null>(null);
-  const harmonicOscillatorsRef = useRef<OscillatorNode[]>([]);
   const leftOscillatorRef = useRef<OscillatorNode | null>(null);
   const rightOscillatorRef = useRef<OscillatorNode | null>(null);
-  const gainNodeRef = useRef<GainNode | null>(null);
   const leftGainRef = useRef<GainNode | null>(null);
   const rightGainRef = useRef<GainNode | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
-  const pannerRef = useRef<StereoPannerNode | null>(null);
-  const sweepIntervalRef = useRef<number | null>(null);
+  const mergerRef = useRef<ChannelMergerNode | null>(null);
+  const splitterRef = useRef<ChannelSplitterNode | null>(null);
+  const compressorRef = useRef<DynamicsCompressorNode | null>(null);
 
   const [state, setState] = useState<AudioEngineState>({
     isPlaying: false,
     frequency: 432,
     intensity: 0.5,
     waveType: 'sine',
-    mode: 'single',
+    mode: 'binaural',
     harmonicCount: 3,
     sweepStart: 396,
     sweepEnd: 852,
@@ -50,11 +50,20 @@ export const useEnhancedAudio = () => {
   });
 
   useEffect(() => {
-    audioContextRef.current = new AudioContext();
+    audioContextRef.current = new AudioContext({ sampleRate: 48000 });
+
     analyserRef.current = audioContextRef.current.createAnalyser();
-    analyserRef.current.fftSize = 2048;
-    analyserRef.current.smoothingTimeConstant = 0.8;
-    pannerRef.current = audioContextRef.current.createStereoPanner();
+    analyserRef.current.fftSize = 8192;
+    analyserRef.current.smoothingTimeConstant = 0.85;
+    analyserRef.current.minDecibels = -90;
+    analyserRef.current.maxDecibels = -10;
+
+    compressorRef.current = audioContextRef.current.createDynamicsCompressor();
+    compressorRef.current.threshold.setValueAtTime(-24, audioContextRef.current.currentTime);
+    compressorRef.current.knee.setValueAtTime(30, audioContextRef.current.currentTime);
+    compressorRef.current.ratio.setValueAtTime(12, audioContextRef.current.currentTime);
+    compressorRef.current.attack.setValueAtTime(0.003, audioContextRef.current.currentTime);
+    compressorRef.current.release.setValueAtTime(0.25, audioContextRef.current.currentTime);
 
     return () => {
       stop();
@@ -63,204 +72,115 @@ export const useEnhancedAudio = () => {
   }, []);
 
   const stopAllOscillators = useCallback(() => {
-    if (mainOscillatorRef.current) {
-      mainOscillatorRef.current.stop();
-      mainOscillatorRef.current.disconnect();
-      mainOscillatorRef.current = null;
-    }
+    try {
+      if (leftOscillatorRef.current) {
+        leftOscillatorRef.current.stop();
+        leftOscillatorRef.current.disconnect();
+        leftOscillatorRef.current = null;
+      }
 
-    harmonicOscillatorsRef.current.forEach(osc => {
-      osc.stop();
-      osc.disconnect();
-    });
-    harmonicOscillatorsRef.current = [];
+      if (rightOscillatorRef.current) {
+        rightOscillatorRef.current.stop();
+        rightOscillatorRef.current.disconnect();
+        rightOscillatorRef.current = null;
+      }
 
-    if (leftOscillatorRef.current) {
-      leftOscillatorRef.current.stop();
-      leftOscillatorRef.current.disconnect();
-      leftOscillatorRef.current = null;
-    }
+      if (leftGainRef.current) {
+        leftGainRef.current.disconnect();
+        leftGainRef.current = null;
+      }
 
-    if (rightOscillatorRef.current) {
-      rightOscillatorRef.current.stop();
-      rightOscillatorRef.current.disconnect();
-      rightOscillatorRef.current = null;
-    }
+      if (rightGainRef.current) {
+        rightGainRef.current.disconnect();
+        rightGainRef.current = null;
+      }
 
-    if (gainNodeRef.current) {
-      gainNodeRef.current.disconnect();
-      gainNodeRef.current = null;
-    }
+      if (mergerRef.current) {
+        mergerRef.current.disconnect();
+        mergerRef.current = null;
+      }
 
-    if (leftGainRef.current) {
-      leftGainRef.current.disconnect();
-      leftGainRef.current = null;
-    }
-
-    if (rightGainRef.current) {
-      rightGainRef.current.disconnect();
-      rightGainRef.current = null;
-    }
-
-    if (sweepIntervalRef.current) {
-      clearInterval(sweepIntervalRef.current);
-      sweepIntervalRef.current = null;
+      if (splitterRef.current) {
+        splitterRef.current.disconnect();
+        splitterRef.current = null;
+      }
+    } catch (error) {
+      console.warn('Error stopping oscillators:', error);
     }
   }, []);
 
-  const startSingleMode = useCallback((frequency: number, intensity: number, waveType: WaveType) => {
-    if (!audioContextRef.current || !analyserRef.current) return;
-
-    const oscillator = audioContextRef.current.createOscillator();
-    const gainNode = audioContextRef.current.createGain();
-
-    oscillator.type = waveType;
-    oscillator.frequency.setValueAtTime(frequency, audioContextRef.current.currentTime);
-    gainNode.gain.setValueAtTime(intensity, audioContextRef.current.currentTime);
-
-    oscillator.connect(gainNode);
-    gainNode.connect(analyserRef.current);
-    analyserRef.current.connect(audioContextRef.current.destination);
-
-    oscillator.start();
-
-    mainOscillatorRef.current = oscillator;
-    gainNodeRef.current = gainNode;
-  }, []);
-
-  const startHarmonicMode = useCallback((
-    frequency: number,
-    intensity: number,
-    waveType: WaveType,
-    harmonicCount: number
-  ) => {
-    if (!audioContextRef.current || !analyserRef.current) return;
-
-    const mainGain = audioContextRef.current.createGain();
-    mainGain.gain.setValueAtTime(intensity, audioContextRef.current.currentTime);
-
-    for (let i = 1; i <= harmonicCount; i++) {
-      const oscillator = audioContextRef.current.createOscillator();
-      const harmonic = audioContextRef.current.createGain();
-
-      oscillator.type = waveType;
-      oscillator.frequency.setValueAtTime(frequency * i, audioContextRef.current.currentTime);
-      harmonic.gain.setValueAtTime(1 / i, audioContextRef.current.currentTime);
-
-      oscillator.connect(harmonic);
-      harmonic.connect(mainGain);
-      oscillator.start();
-
-      harmonicOscillatorsRef.current.push(oscillator);
-    }
-
-    mainGain.connect(analyserRef.current);
-    analyserRef.current.connect(audioContextRef.current.destination);
-    gainNodeRef.current = mainGain;
-  }, []);
-
-  const startSweepMode = useCallback((
-    startFreq: number,
-    endFreq: number,
-    duration: number,
+  const startBinauralBeats = useCallback((
+    baseFrequency: number,
+    beatFrequency: number,
     intensity: number,
     waveType: WaveType
   ) => {
-    if (!audioContextRef.current || !analyserRef.current) return;
+    if (!audioContextRef.current || !analyserRef.current || !compressorRef.current) return;
 
-    const oscillator = audioContextRef.current.createOscillator();
-    const gainNode = audioContextRef.current.createGain();
+    const context = audioContextRef.current;
+    const currentTime = context.currentTime;
 
-    oscillator.type = waveType;
-    oscillator.frequency.setValueAtTime(startFreq, audioContextRef.current.currentTime);
-    gainNode.gain.setValueAtTime(intensity, audioContextRef.current.currentTime);
+    const leftFreq = baseFrequency;
+    const rightFreq = baseFrequency + beatFrequency;
 
-    oscillator.connect(gainNode);
-    gainNode.connect(analyserRef.current);
-    analyserRef.current.connect(audioContextRef.current.destination);
-
-    oscillator.start();
-
-    mainOscillatorRef.current = oscillator;
-    gainNodeRef.current = gainNode;
-
-    let currentFreq = startFreq;
-    const step = (endFreq - startFreq) / (duration * 10);
-
-    sweepIntervalRef.current = window.setInterval(() => {
-      currentFreq += step;
-      if ((step > 0 && currentFreq >= endFreq) || (step < 0 && currentFreq <= endFreq)) {
-        currentFreq = startFreq;
-      }
-      if (mainOscillatorRef.current && audioContextRef.current) {
-        mainOscillatorRef.current.frequency.setValueAtTime(
-          currentFreq,
-          audioContextRef.current.currentTime
-        );
-      }
-    }, 100);
-  }, []);
-
-  const startBinauralMode = useCallback((
-    frequency: number,
-    intensity: number,
-    waveType: WaveType,
-    beatFrequency: number
-  ) => {
-    if (!audioContextRef.current || !analyserRef.current) return;
-
-    const leftOsc = audioContextRef.current.createOscillator();
-    const rightOsc = audioContextRef.current.createOscillator();
-    const leftGain = audioContextRef.current.createGain();
-    const rightGain = audioContextRef.current.createGain();
-    const merger = audioContextRef.current.createChannelMerger(2);
+    const leftOsc = context.createOscillator();
+    const rightOsc = context.createOscillator();
+    const leftGain = context.createGain();
+    const rightGain = context.createGain();
+    const merger = context.createChannelMerger(2);
+    const splitter = context.createChannelSplitter(2);
 
     leftOsc.type = waveType;
     rightOsc.type = waveType;
-    leftOsc.frequency.setValueAtTime(frequency, audioContextRef.current.currentTime);
-    rightOsc.frequency.setValueAtTime(frequency + beatFrequency, audioContextRef.current.currentTime);
 
-    leftGain.gain.setValueAtTime(intensity, audioContextRef.current.currentTime);
-    rightGain.gain.setValueAtTime(intensity, audioContextRef.current.currentTime);
+    leftOsc.frequency.setValueAtTime(leftFreq, currentTime);
+    rightOsc.frequency.setValueAtTime(rightFreq, currentTime);
+
+    const safeIntensity = Math.max(0.01, Math.min(0.8, intensity));
+
+    leftGain.gain.setValueAtTime(0, currentTime);
+    rightGain.gain.setValueAtTime(0, currentTime);
+    leftGain.gain.linearRampToValueAtTime(safeIntensity, currentTime + 0.5);
+    rightGain.gain.linearRampToValueAtTime(safeIntensity, currentTime + 0.5);
 
     leftOsc.connect(leftGain);
     rightOsc.connect(rightGain);
+
     leftGain.connect(merger, 0, 0);
     rightGain.connect(merger, 0, 1);
-    merger.connect(analyserRef.current);
-    analyserRef.current.connect(audioContextRef.current.destination);
 
-    leftOsc.start();
-    rightOsc.start();
+    merger.connect(splitter);
+    splitter.connect(analyserRef.current, 0);
+    splitter.connect(analyserRef.current, 1);
+
+    merger.connect(compressorRef.current);
+    compressorRef.current.connect(context.destination);
+
+    leftOsc.start(currentTime);
+    rightOsc.start(currentTime);
 
     leftOscillatorRef.current = leftOsc;
     rightOscillatorRef.current = rightOsc;
     leftGainRef.current = leftGain;
     rightGainRef.current = rightGain;
+    mergerRef.current = merger;
+    splitterRef.current = splitter;
   }, []);
 
-  const start = useCallback((config: Partial<AudioEngineState>) => {
+  const start = useCallback((config: Partial<AudioEngineState> = {}) => {
+    if (audioContextRef.current?.state === 'suspended') {
+      audioContextRef.current.resume();
+    }
+
     stopAllOscillators();
 
     const newState = { ...state, ...config, isPlaying: true };
     setState(newState);
 
-    const { mode, frequency, intensity, waveType, harmonicCount, sweepStart, sweepEnd, sweepDuration, binauralBeat } = newState;
+    const { frequency, intensity, waveType, binauralBeat } = newState;
 
-    switch (mode) {
-      case 'harmonic':
-        startHarmonicMode(frequency, intensity, waveType, harmonicCount);
-        break;
-      case 'sweep':
-        startSweepMode(sweepStart, sweepEnd, sweepDuration, intensity, waveType);
-        break;
-      case 'binaural':
-        startBinauralMode(frequency, intensity, waveType, binauralBeat);
-        break;
-      default:
-        startSingleMode(frequency, intensity, waveType);
-    }
-  }, [state, stopAllOscillators, startSingleMode, startHarmonicMode, startSweepMode, startBinauralMode]);
+    startBinauralBeats(frequency, binauralBeat, intensity, waveType);
+  }, [state, stopAllOscillators, startBinauralBeats]);
 
   const stop = useCallback(() => {
     stopAllOscillators();
@@ -268,65 +188,115 @@ export const useEnhancedAudio = () => {
   }, [stopAllOscillators]);
 
   const updateFrequency = useCallback((frequency: number) => {
-    if (mainOscillatorRef.current && audioContextRef.current && state.mode === 'single') {
-      mainOscillatorRef.current.frequency.setValueAtTime(
-        frequency,
-        audioContextRef.current.currentTime
-      );
-    }
     setState(prev => ({ ...prev, frequency }));
-  }, [state.mode]);
+
+    if (state.isPlaying && leftOscillatorRef.current && rightOscillatorRef.current && audioContextRef.current) {
+      const currentTime = audioContextRef.current.currentTime;
+      const leftFreq = frequency;
+      const rightFreq = frequency + state.binauralBeat;
+
+      leftOscillatorRef.current.frequency.setTargetAtTime(leftFreq, currentTime, 0.1);
+      rightOscillatorRef.current.frequency.setTargetAtTime(rightFreq, currentTime, 0.1);
+    }
+  }, [state.isPlaying, state.binauralBeat]);
 
   const updateIntensity = useCallback((intensity: number) => {
-    if (gainNodeRef.current && audioContextRef.current) {
-      gainNodeRef.current.gain.setValueAtTime(
-        intensity,
-        audioContextRef.current.currentTime
-      );
-    }
-    if (leftGainRef.current && audioContextRef.current) {
-      leftGainRef.current.gain.setValueAtTime(
-        intensity,
-        audioContextRef.current.currentTime
-      );
-    }
-    if (rightGainRef.current && audioContextRef.current) {
-      rightGainRef.current.gain.setValueAtTime(
-        intensity,
-        audioContextRef.current.currentTime
-      );
-    }
     setState(prev => ({ ...prev, intensity }));
-  }, []);
+
+    if (state.isPlaying && leftGainRef.current && rightGainRef.current && audioContextRef.current) {
+      const currentTime = audioContextRef.current.currentTime;
+      const safeIntensity = Math.max(0.01, Math.min(0.8, intensity));
+
+      leftGainRef.current.gain.setTargetAtTime(safeIntensity, currentTime, 0.1);
+      rightGainRef.current.gain.setTargetAtTime(safeIntensity, currentTime, 0.1);
+    }
+  }, [state.isPlaying]);
+
+  const updateBinauralBeat = useCallback((binauralBeat: number) => {
+    setState(prev => ({ ...prev, binauralBeat }));
+
+    if (state.isPlaying && rightOscillatorRef.current && audioContextRef.current) {
+      const currentTime = audioContextRef.current.currentTime;
+      const rightFreq = state.frequency + binauralBeat;
+
+      rightOscillatorRef.current.frequency.setTargetAtTime(rightFreq, currentTime, 0.1);
+    }
+  }, [state.isPlaying, state.frequency]);
 
   const getSpectrumData = useCallback((): SpectrumData => {
     if (!analyserRef.current) {
       return {
-        frequencies: new Uint8Array(0),
-        timeDomain: new Uint8Array(0),
+        frequencyData: new Uint8Array(0),
         averageEnergy: 0,
         peakFrequency: 0,
+        bassEnergy: 0,
+        midEnergy: 0,
+        trebleEnergy: 0,
       };
     }
 
-    const frequencyData = new Uint8Array(analyserRef.current.frequencyBinCount);
-    const timeDomainData = new Uint8Array(analyserRef.current.frequencyBinCount);
+    const bufferLength = analyserRef.current.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    analyserRef.current.getByteFrequencyData(dataArray);
 
-    analyserRef.current.getByteFrequencyData(frequencyData);
-    analyserRef.current.getByteTimeDomainData(timeDomainData);
+    let sum = 0;
+    let maxValue = 0;
+    let maxIndex = 0;
 
-    const sum = Array.from(frequencyData).reduce((a, b) => a + b, 0);
-    const averageEnergy = sum / frequencyData.length / 255;
+    for (let i = 0; i < bufferLength; i++) {
+      sum += dataArray[i];
+      if (dataArray[i] > maxValue) {
+        maxValue = dataArray[i];
+        maxIndex = i;
+      }
+    }
 
-    const maxIndex = frequencyData.indexOf(Math.max(...Array.from(frequencyData)));
-    const peakFrequency = (maxIndex / frequencyData.length) * (audioContextRef.current?.sampleRate || 44100) / 2;
+    const averageEnergy = sum / bufferLength / 255;
+
+    const sampleRate = audioContextRef.current?.sampleRate || 48000;
+    const peakFrequency = (maxIndex * sampleRate) / (analyserRef.current.fftSize * 2);
+
+    const bassEnd = Math.floor(bufferLength * 0.1);
+    const midEnd = Math.floor(bufferLength * 0.4);
+
+    let bassSum = 0;
+    let midSum = 0;
+    let trebleSum = 0;
+
+    for (let i = 0; i < bassEnd; i++) {
+      bassSum += dataArray[i];
+    }
+    for (let i = bassEnd; i < midEnd; i++) {
+      midSum += dataArray[i];
+    }
+    for (let i = midEnd; i < bufferLength; i++) {
+      trebleSum += dataArray[i];
+    }
+
+    const bassEnergy = bassSum / bassEnd / 255;
+    const midEnergy = midSum / (midEnd - bassEnd) / 255;
+    const trebleEnergy = trebleSum / (bufferLength - midEnd) / 255;
 
     return {
-      frequencies: frequencyData,
-      timeDomain: timeDomainData,
+      frequencyData: dataArray,
       averageEnergy,
       peakFrequency,
+      bassEnergy,
+      midEnergy,
+      trebleEnergy,
     };
+  }, []);
+
+  const getActualFrequencies = useCallback((): { left: number; right: number; beat: number } => {
+    if (!leftOscillatorRef.current || !rightOscillatorRef.current) {
+      return { left: 0, right: 0, beat: 0 };
+    }
+
+    const leftFreq = leftOscillatorRef.current.frequency.value;
+    const rightFreq = rightOscillatorRef.current.frequency.value;
+    const beat = rightFreq - leftFreq;
+
+    return { left: leftFreq, right: rightFreq, beat };
   }, []);
 
   return {
@@ -335,7 +305,8 @@ export const useEnhancedAudio = () => {
     stop,
     updateFrequency,
     updateIntensity,
+    updateBinauralBeat,
     getSpectrumData,
-    setState,
+    getActualFrequencies,
   };
 };

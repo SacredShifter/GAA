@@ -40,6 +40,8 @@ export { VisionModal } from './components/VisionModal';
 
 export { AboutModal } from './components/AboutModal';
 
+export { AudioCalibration } from './components/AudioCalibration';
+
 export { ThresholdNotification } from './components/ThresholdNotification';
 
 export { usePerformanceQuality } from './hooks/usePerformanceQuality';

@@ -104,6 +104,9 @@ export const useGAA = (options: UseGAAOptions = {}) => {
     if (config.intensity !== undefined) {
       audio.updateIntensity(config.intensity);
     }
+    if (config.binauralBeat !== undefined) {
+      audio.updateBinauralBeat(config.binauralBeat);
+    }
     if (config.pulseSpeed !== undefined) {
       setPulseSpeed(config.pulseSpeed);
     }
@@ -172,6 +175,7 @@ export const useGAA = (options: UseGAAOptions = {}) => {
     setGeometryMode,
     setEnableOrbitControls,
     getSpectrumData: audio.getSpectrumData,
+    getActualFrequencies: audio.getActualFrequencies,
   };
 };
 

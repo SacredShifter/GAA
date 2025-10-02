@@ -8,6 +8,7 @@ import { PresetsModal } from './PresetsModal';
 import { HelpModal } from './HelpModal';
 import { VisionModal } from './VisionModal';
 import { ThresholdNotification } from './ThresholdNotification';
+import { AudioCalibration } from './AudioCalibration';
 
 export interface GAAProps extends UseGAAOptions {
   theme?: 'dark' | 'light';
@@ -155,6 +156,15 @@ export const GAA: React.FC<GAAProps> = ({
           theme={theme}
         />
       )}
+
+      <AudioCalibration
+        getActualFrequencies={gaa.getActualFrequencies}
+        getSpectrumData={gaa.getSpectrumData}
+        isPlaying={gaa.state.isPlaying}
+        targetFrequency={gaa.state.frequency}
+        targetBeat={gaa.state.binauralBeat}
+        theme={theme}
+      />
     </div>
   );
 };
