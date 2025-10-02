@@ -74,6 +74,19 @@ export type { SafetyConfig, SafetyWarning } from './utils/safetyMonitor';
 export { GEOMETRIC_PACKS, BASE_FREQUENCIES, calculateHarmonicStack, getGeometricPackByShape, centsToFrequencyRatio, frequencyRatioToCents } from './utils/geometricFrequencies';
 export type { GeometricFrequencyPack } from './utils/geometricFrequencies';
 
+export { EGYPTIAN_CODE_CHAPTERS, getTotalDuration, getChapterById, getChapterIndex, getNextChapter, getPreviousChapter, generatePhiIntervals, generateHarmonicStack, PHI } from './utils/egyptianCodeFrequencies';
+export type { EgyptianChapter } from './utils/egyptianCodeFrequencies';
+
+export { EgyptianAudioEngine } from './utils/egyptianAudioEngine';
+
+export { EgyptianCodeGAA } from './components/EgyptianCodeGAA';
+export type { EgyptianCodeGAAProps } from './components/EgyptianCodeGAA';
+
+export { EgyptianVisuals } from './components/EgyptianVisuals';
+
+export { useEgyptianCode } from './hooks/useEgyptianCode';
+export type { EgyptianCodeState } from './hooks/useEgyptianCode';
+
 export { GaaModuleWrapper, getModuleManifest, getExposedItems } from './integrations/GaaModuleWrapper';
 export type {
   ModuleManifest,
