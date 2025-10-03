@@ -47,12 +47,27 @@ export const CollectiveConsciousnessField: React.FC<CollectiveConsciousnessField
   };
 
   const handleProposeIntention = async () => {
-    if (!intentionText.trim()) return;
+    if (!intentionText.trim()) {
+      alert('Please enter an intention text.');
+      return;
+    }
+
+    if (!cc.state.isActive) {
+      alert('Please start a session first.');
+      return;
+    }
+
+    if (!userId) {
+      alert('User ID is required to propose intentions.');
+      return;
+    }
 
     const intention = await cc.proposeIntention(intentionText, intentionCategory);
     if (intention) {
       setIntentionText('');
       alert('Intention proposed! Others can now vote on it.');
+    } else {
+      alert('Failed to propose intention. Please check your connection and try again.');
     }
   };
 
@@ -461,17 +476,29 @@ export const CollectiveConsciousnessField: React.FC<CollectiveConsciousnessField
 
                     <button
                       onClick={handleProposeIntention}
-                      disabled={!cc.state.isActive || !intentionText.trim()}
-                      className="w-full md:w-auto bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white px-6 py-2 rounded-lg font-semibold"
+                      disabled={!cc.state.isActive || !intentionText.trim() || !userId}
+                      className="w-full md:w-auto bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-6 py-2 rounded-lg font-semibold transition-colors"
                     >
                       Propose
                     </button>
                   </div>
 
-                  <p className={`text-xs mt-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                    Your intention will be shared with the collective for voting. Coherence level
-                    determines vote power.
-                  </p>
+                  <div className={`text-xs mt-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+                    {!cc.state.isActive ? (
+                      <p className="text-yellow-500">
+                        ⚠️ Start a session first to propose intentions.
+                      </p>
+                    ) : !userId ? (
+                      <p className="text-yellow-500">
+                        ⚠️ User ID required to propose intentions.
+                      </p>
+                    ) : (
+                      <p>
+                        Your intention will be shared with the collective for voting. Coherence level
+                        determines vote power.
+                      </p>
+                    )}
+                  </div>
                 </div>
               )}
             </div>

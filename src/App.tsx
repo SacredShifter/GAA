@@ -10,6 +10,14 @@ type ExperienceMode = 'precision' | 'egyptian' | 'collective';
 function App() {
   const [showAbout, setShowAbout] = useState(false);
   const [mode, setMode] = useState<ExperienceMode>('collective');
+  const [userId] = useState(() => {
+    let id = localStorage.getItem('gaa-user-id');
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem('gaa-user-id', id);
+    }
+    return id;
+  });
 
   useEffect(() => {
     const hasSeenWelcome = localStorage.getItem('gaa-welcome-seen');
@@ -41,13 +49,13 @@ function App() {
     <>
       {mode === 'collective' ? (
         <CollectiveConsciousnessField
-          userId="demo-user"
+          userId={userId}
           theme="dark"
           showControls={true}
         />
       ) : mode === 'precision' ? (
         <PrecisionGAA
-          userId="demo-user"
+          userId={userId}
           theme="dark"
           showControls={true}
         />
