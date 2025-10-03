@@ -367,61 +367,8 @@ export const SpacetimeFieldVisualization: React.FC<SpacetimeFieldVisualizationPr
     <div className="relative w-full h-full">
       <div ref={containerRef} className="w-full h-full" />
 
-      <div className="absolute top-4 left-4 bg-black bg-opacity-50 text-white p-4 rounded-lg">
-        <div className="text-sm font-mono space-y-1">
-          <div>Participants: {collectiveWave?.participants.length || 0}</div>
-          <div>
-            Global Coherence: {((collectiveWave?.globalCoherence || 0) * 100).toFixed(1)}%
-          </div>
-          <div>
-            Entanglements: {collectiveWave?.entanglements.length || 0}
-          </div>
-          <div>
-            Emergent Frequency: {collectiveWave?.emergentFrequency.toFixed(1) || 432} Hz
-          </div>
-        </div>
-      </div>
 
-      {showPast && timelineRef.current.length > 0 && (
-        <div className="absolute bottom-4 left-4 right-4 bg-black bg-opacity-50 p-4 rounded-lg">
-          <div className="text-white text-sm mb-2">Timeline (Past → Present → Future)</div>
-          <input
-            type="range"
-            min={0}
-            max={timelineRef.current.length - 1}
-            value={timelinePosition}
-            onChange={(e) => {
-              const pos = parseInt(e.target.value);
-              setTimelinePosition(pos);
-              jumpToTimestamp(timelineRef.current[pos].timestamp);
-            }}
-            className="w-full"
-          />
-          <div className="flex justify-between text-white text-xs mt-2">
-            <span>-{timeWindowSeconds}s</span>
-            <span>Now</span>
-            {showFuture && <span>+{timeWindowSeconds}s (predicted)</span>}
-          </div>
-        </div>
-      )}
 
-      <div className="absolute top-4 right-4 space-x-2">
-        <button
-          onClick={() => setIsPaused(!isPaused)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm"
-        >
-          {isPaused ? 'Resume' : 'Pause'}
-        </button>
-        <button
-          onClick={() => {
-            setTimelinePosition(timelineRef.current.length - 1);
-            setIsPaused(false);
-          }}
-          className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm"
-        >
-          Live
-        </button>
-      </div>
     </div>
   );
 };
