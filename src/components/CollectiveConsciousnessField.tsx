@@ -4,6 +4,7 @@ import { useCollectiveConsciousness } from '../hooks/useCollectiveConsciousness'
 import { SpacetimeFieldVisualization } from './SpacetimeFieldVisualization';
 import { EventCalendar } from './EventCalendar';
 import { CreateEventModal } from './CreateEventModal';
+import { MobileDock } from './MobileDock';
 
 export interface CollectiveConsciousnessFieldProps {
   userId?: string;
@@ -27,7 +28,6 @@ export const CollectiveConsciousnessField: React.FC<CollectiveConsciousnessField
   const [biometricsExpanded, setBiometricsExpanded] = useState(false);
   const [aiExpanded, setAiExpanded] = useState(false);
   const [intentionExpanded, setIntentionExpanded] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showEventCalendar, setShowEventCalendar] = useState(false);
   const [showCreateEvent, setShowCreateEvent] = useState(false);
   const [calendarKey, setCalendarKey] = useState(0);
@@ -45,7 +45,6 @@ export const CollectiveConsciousnessField: React.FC<CollectiveConsciousnessField
     const success = await cc.initializeBiometricDevice(type);
     if (success) {
       setDeviceType(type);
-      setMobileMenuOpen(false);
     } else {
       alert(`Failed to initialize ${type} device. Please check permissions and try again.`);
     }
@@ -107,8 +106,8 @@ export const CollectiveConsciousnessField: React.FC<CollectiveConsciousnessField
 
       {showControls && (
         <>
-          {/* Top Right Controls */}
-          <div className="fixed top-4 right-4 z-50 flex gap-2">
+          {/* Desktop: Top Right Calendar Button */}
+          <div className="hidden md:flex fixed top-4 right-4 z-50 gap-2">
             <button
               onClick={() => setShowEventCalendar(!showEventCalendar)}
               className={`p-3 rounded-full ${showEventCalendar ? 'bg-blue-600' : 'bg-gray-900'} bg-opacity-90 backdrop-blur-sm border ${showEventCalendar ? 'border-blue-500' : 'border-gray-800'} shadow-2xl hover:scale-105 transition-transform`}
@@ -116,23 +115,10 @@ export const CollectiveConsciousnessField: React.FC<CollectiveConsciousnessField
             >
               <Calendar className="w-6 h-6 text-white" />
             </button>
-
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-3 rounded-full bg-gray-900 bg-opacity-90 backdrop-blur-sm border border-gray-800 shadow-2xl"
-            >
-              {mobileMenuOpen ? (
-                <X className="w-6 h-6 text-white" />
-              ) : (
-                <Menu className="w-6 h-6 text-white" />
-              )}
-            </button>
           </div>
 
-          {/* Left Panel - Status & Biometrics */}
-          <div className={`fixed md:absolute top-0 md:top-6 left-0 md:left-6 z-40 w-full md:w-auto md:max-w-sm h-full md:h-auto overflow-y-auto md:overflow-visible bg-black/95 md:bg-transparent p-4 md:p-0 space-y-4 transition-transform duration-300 ${
-            mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
-          }`}>
+          {/* Desktop: Left Panel - Status & Biometrics */}
+          <div className="hidden md:block absolute top-6 left-6 z-40 max-w-sm space-y-4">
             {/* Field Status Panel */}
             <div
               className={`${theme === 'dark' ? 'bg-gray-900 bg-opacity-90' : 'bg-white bg-opacity-90'} backdrop-blur-sm rounded-2xl shadow-2xl border ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'} w-full md:w-80`}
@@ -262,10 +248,7 @@ export const CollectiveConsciousnessField: React.FC<CollectiveConsciousnessField
                           </div>
                         ) : (
                           <button
-                            onClick={() => {
-                              cc.startSession();
-                              setMobileMenuOpen(false);
-                            }}
+                            onClick={() => cc.startSession()}
                             className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg flex items-center justify-center gap-2 font-semibold"
                           >
                             <Play className="w-5 h-5" />
@@ -275,10 +258,7 @@ export const CollectiveConsciousnessField: React.FC<CollectiveConsciousnessField
                       </>
                     ) : (
                       <button
-                        onClick={() => {
-                          cc.stopSession();
-                          setMobileMenuOpen(false);
-                        }}
+                        onClick={() => cc.stopSession()}
                         className="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg flex items-center justify-center gap-2 font-semibold"
                       >
                         <Pause className="w-5 h-5" />
@@ -519,9 +499,9 @@ export const CollectiveConsciousnessField: React.FC<CollectiveConsciousnessField
             </div>
           </div>
 
-          {/* Event Calendar Panel */}
+          {/* Desktop: Event Calendar Panel */}
           {showEventCalendar && (
-            <div className="fixed top-20 right-4 z-40 w-full max-w-md md:max-w-lg">
+            <div className="hidden md:block fixed top-20 right-4 z-40 w-full max-w-md md:max-w-lg">
               <EventCalendar
                 key={calendarKey}
                 userId={userId}
@@ -530,6 +510,116 @@ export const CollectiveConsciousnessField: React.FC<CollectiveConsciousnessField
               />
             </div>
           )}
+
+          {/* Mobile: Bottom Dock */}
+          <div className="md:hidden">
+            <MobileDock
+              userId={userId}
+              theme={theme}
+              statusContent={{
+                isActive: cc.state.isActive,
+                participantCount: cc.state.participantCount,
+                globalCoherence: cc.state.globalCoherence,
+                fieldStrength: cc.state.fieldStrength,
+                emergentFrequency: cc.state.emergentFrequency,
+                quantumEntanglementMetric: cc.state.quantumEntanglementMetric,
+                biometricDeviceConnected: cc.state.biometricDeviceConnected,
+                onStartSession: () => cc.startSession(),
+                onStopSession: () => cc.stopSession(),
+                onInitializeBiometrics: handleInitializeBiometrics,
+              }}
+              controlsContent={
+                <div className="space-y-4">
+                  {/* Biometrics */}
+                  {cc.state.myBiometrics && (
+                    <div className="space-y-2 text-sm text-white">
+                      <h4 className="font-semibold text-cyan-400 mb-3">Your Biometrics</h4>
+                      {cc.state.myBiometrics.heartRate && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">Heart Rate:</span>
+                          <span className="font-bold text-red-400">
+                            {cc.state.myBiometrics.heartRate} BPM
+                          </span>
+                        </div>
+                      )}
+                      {cc.state.myBiometrics.hrvRMSSD && (
+                        <div className="flex justify-between">
+                          <span className="text-gray-300">HRV:</span>
+                          <span className="font-mono text-green-400">
+                            {cc.state.myBiometrics.hrvRMSSD.toFixed(1)} ms
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex justify-between">
+                        <span className="text-gray-300">Coherence:</span>
+                        <span className={`font-bold ${getCoherenceColor(cc.state.myBiometrics.coherenceScore)}`}>
+                          {(cc.state.myBiometrics.coherenceScore * 100).toFixed(0)}%
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Intentions */}
+                  <div className="space-y-3 pt-4 border-t border-gray-700">
+                    <h4 className="font-semibold text-green-400">Collective Intention</h4>
+                    <select
+                      value={intentionCategory}
+                      onChange={(e) => setIntentionCategory(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg bg-gray-800 text-white"
+                    >
+                      <option value="healing">Healing</option>
+                      <option value="growth">Growth</option>
+                      <option value="manifestation">Manifestation</option>
+                      <option value="exploration">Exploration</option>
+                      <option value="connection">Connection</option>
+                      <option value="wisdom">Wisdom</option>
+                    </select>
+                    <input
+                      type="text"
+                      value={intentionText}
+                      onChange={(e) => setIntentionText(e.target.value)}
+                      placeholder="Enter your intention..."
+                      className="w-full px-4 py-2 rounded-lg bg-gray-800 text-white placeholder-gray-500"
+                    />
+                    <button
+                      onClick={handleProposeIntention}
+                      disabled={!cc.state.isActive || !intentionText.trim() || !userId}
+                      className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white px-6 py-2 rounded-lg font-semibold"
+                    >
+                      Propose Intention
+                    </button>
+                  </div>
+
+                  {/* AI Insights */}
+                  {cc.state.aiInsights.length > 0 && (
+                    <div className="space-y-2 pt-4 border-t border-gray-700">
+                      <h4 className="font-semibold text-yellow-400 mb-3">AI Insights</h4>
+                      {cc.state.aiInsights.slice(0, 3).map((insight, idx) => (
+                        <div key={idx} className="p-3 bg-gray-800 rounded-lg">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-semibold text-yellow-400 uppercase">
+                              {insight.type}
+                            </span>
+                            <span className="text-xs text-gray-400">
+                              {new Date(insight.timestamp).toLocaleTimeString()}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-300">{insight.message}</p>
+                          {insight.recommendation && (
+                            <p className="text-xs text-blue-400 mt-2">
+                              💡 {insight.recommendation}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              }
+              onCreateEvent={() => setShowCreateEvent(true)}
+              calendarKey={calendarKey}
+            />
+          </div>
         </>
       )}
 
