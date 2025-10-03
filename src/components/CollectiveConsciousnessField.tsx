@@ -548,6 +548,3 @@ export const CollectiveConsciousnessField: React.FC<CollectiveConsciousnessField
     </div>
   );
 };
-
-
-export { CollectiveConsciousnessField }
