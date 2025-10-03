@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Play, Pause, Heart, Brain, Network, Sparkles, Users, TrendingUp, ChevronDown, ChevronUp, Menu, X } from 'lucide-react';
+import { Play, Pause, Heart, Brain, Network, Sparkles, Users, TrendingUp, ChevronDown, ChevronUp, Menu, X, Calendar } from 'lucide-react';
 import { useCollectiveConsciousness } from '../hooks/useCollectiveConsciousness';
 import { SpacetimeFieldVisualization } from './SpacetimeFieldVisualization';
+import { EventCalendar } from './EventCalendar';
+import { CreateEventModal } from './CreateEventModal';
 
 export interface CollectiveConsciousnessFieldProps {
   userId?: string;
@@ -26,6 +28,9 @@ export const CollectiveConsciousnessField: React.FC<CollectiveConsciousnessField
   const [aiExpanded, setAiExpanded] = useState(false);
   const [intentionExpanded, setIntentionExpanded] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showEventCalendar, setShowEventCalendar] = useState(false);
+  const [showCreateEvent, setShowCreateEvent] = useState(false);
+  const [calendarKey, setCalendarKey] = useState(0);
 
   const cc = useCollectiveConsciousness({
     userId,
@@ -102,17 +107,27 @@ export const CollectiveConsciousnessField: React.FC<CollectiveConsciousnessField
 
       {showControls && (
         <>
-          {/* Mobile Menu Toggle */}
-          <button
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden fixed top-4 right-4 z-50 p-3 rounded-full bg-gray-900 bg-opacity-90 backdrop-blur-sm border border-gray-800 shadow-2xl"
-          >
-            {mobileMenuOpen ? (
-              <X className="w-6 h-6 text-white" />
-            ) : (
-              <Menu className="w-6 h-6 text-white" />
-            )}
-          </button>
+          {/* Top Right Controls */}
+          <div className="fixed top-4 right-4 z-50 flex gap-2">
+            <button
+              onClick={() => setShowEventCalendar(!showEventCalendar)}
+              className={`p-3 rounded-full ${showEventCalendar ? 'bg-blue-600' : 'bg-gray-900'} bg-opacity-90 backdrop-blur-sm border ${showEventCalendar ? 'border-blue-500' : 'border-gray-800'} shadow-2xl hover:scale-105 transition-transform`}
+              title="Event Calendar"
+            >
+              <Calendar className="w-6 h-6 text-white" />
+            </button>
+
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-3 rounded-full bg-gray-900 bg-opacity-90 backdrop-blur-sm border border-gray-800 shadow-2xl"
+            >
+              {mobileMenuOpen ? (
+                <X className="w-6 h-6 text-white" />
+              ) : (
+                <Menu className="w-6 h-6 text-white" />
+              )}
+            </button>
+          </div>
 
           {/* Left Panel - Status & Biometrics */}
           <div className={`fixed md:absolute top-0 md:top-6 left-0 md:left-6 z-40 w-full md:w-auto md:max-w-sm h-full md:h-auto overflow-y-auto md:overflow-visible bg-black/95 md:bg-transparent p-4 md:p-0 space-y-4 transition-transform duration-300 ${
@@ -503,8 +518,36 @@ export const CollectiveConsciousnessField: React.FC<CollectiveConsciousnessField
               )}
             </div>
           </div>
+
+          {/* Event Calendar Panel */}
+          {showEventCalendar && (
+            <div className="fixed top-20 right-4 z-40 w-full max-w-md md:max-w-lg">
+              <EventCalendar
+                key={calendarKey}
+                userId={userId}
+                theme={theme}
+                onCreateEvent={() => setShowCreateEvent(true)}
+              />
+            </div>
+          )}
         </>
+      )}
+
+      {/* Create Event Modal */}
+      {userId && (
+        <CreateEventModal
+          isOpen={showCreateEvent}
+          onClose={() => setShowCreateEvent(false)}
+          userId={userId}
+          theme={theme}
+          onEventCreated={() => {
+            setCalendarKey(prev => prev + 1);
+          }}
+        />
       )}
     </div>
   );
 };
+
+
+export { CollectiveConsciousnessField }
