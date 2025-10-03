@@ -106,6 +106,15 @@ export const CollectiveConsciousnessField: React.FC<CollectiveConsciousnessField
 
       {showControls && (
         <>
+          {/* Logo - Top Left */}
+          <div className="fixed top-4 left-4 z-50">
+            <img
+              src="https://mikltjgbvxrxndtszorb.supabase.co/storage/v1/object/public/sacred-assets/uploads/Logo-MainSacredShifter-removebg-preview.png"
+              alt="Sacred Shifter"
+              className="h-12 md:h-16 w-auto invert opacity-90 hover:opacity-100 transition-opacity"
+            />
+          </div>
+
           {/* Desktop: Top Right Calendar Button */}
           <div className="hidden md:flex fixed top-4 right-4 z-50 gap-2">
             <button
