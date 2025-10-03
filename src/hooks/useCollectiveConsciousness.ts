@@ -423,9 +423,20 @@ export const useCollectiveConsciousness = (
     []
   );
 
+  const forgetBiometricDevice = useCallback(() => {
+    if (biometricMonitor.current) {
+      biometricMonitor.current.forgetBluetoothDevice();
+      setState((prev) => ({
+        ...prev,
+        biometricDeviceConnected: false,
+      }));
+    }
+  }, []);
+
   return {
     state,
     initializeBiometricDevice,
+    forgetBiometricDevice,
     startSession,
     stopSession,
     proposeIntention,

@@ -57,11 +57,62 @@ export class BiometricMonitor {
         return false;
       }
 
+      // Try to reconnect to a previously paired device first
+      const reconnected = await this.tryReconnectPreviousDevice();
+      if (reconnected) {
+        console.log('Successfully reconnected to previously paired device');
+        return true;
+      }
+
+      // If no previous device or reconnection failed, request a new device
       this.bluetoothDevice = await navigator.bluetooth.requestDevice({
         filters: [{ services: ['heart_rate'] }],
       });
 
-      const server = await this.bluetoothDevice.gatt?.connect();
+      // Store device ID for future reconnection
+      if (this.bluetoothDevice.id) {
+        localStorage.setItem('gaa-bluetooth-device-id', this.bluetoothDevice.id);
+      }
+
+      const connected = await this.connectToDevice(this.bluetoothDevice);
+      return connected;
+    } catch (error) {
+      console.error('Failed to initialize Bluetooth HRM:', error);
+      return false;
+    }
+  }
+
+  private async tryReconnectPreviousDevice(): Promise<boolean> {
+    try {
+      const storedDeviceId = localStorage.getItem('gaa-bluetooth-device-id');
+      if (!storedDeviceId) {
+        return false;
+      }
+
+      // Check if getDevices is available (newer API)
+      if ('getDevices' in navigator.bluetooth) {
+        const devices = await (navigator.bluetooth as any).getDevices();
+        const previousDevice = devices.find((d: BluetoothDevice) => d.id === storedDeviceId);
+
+        if (previousDevice) {
+          this.bluetoothDevice = previousDevice;
+          const connected = await this.connectToDevice(previousDevice);
+          if (connected) {
+            return true;
+          }
+        }
+      }
+
+      return false;
+    } catch (error) {
+      console.warn('Failed to reconnect to previous device:', error);
+      return false;
+    }
+  }
+
+  private async connectToDevice(device: BluetoothDevice): Promise<boolean> {
+    try {
+      const server = await device.gatt?.connect();
       if (!server) return false;
 
       const service = await server.getPrimaryService('heart_rate');
@@ -77,9 +128,15 @@ export class BiometricMonitor {
         }
       });
 
+      // Listen for disconnection
+      device.addEventListener('gattserverdisconnected', () => {
+        console.log('Bluetooth device disconnected');
+        this.bluetoothDevice = null;
+      });
+
       return true;
     } catch (error) {
-      console.error('Failed to initialize Bluetooth HRM:', error);
+      console.error('Failed to connect to device:', error);
       return false;
     }
   }
@@ -341,11 +398,20 @@ export class BiometricMonitor {
     return Math.max(0, Math.min(1, quality));
   }
 
+  forgetBluetoothDevice(): void {
+    localStorage.removeItem('gaa-bluetooth-device-id');
+    if (this.bluetoothDevice?.gatt?.connected) {
+      this.bluetoothDevice.gatt.disconnect();
+    }
+    this.bluetoothDevice = null;
+  }
+
   destroy(): void {
     this.stopMonitoring();
     this.ppgBuffer = [];
     this.videoElement = null;
     this.canvas = null;
     this.ctx = null;
+    this.bluetoothDevice = null;
   }
 }
