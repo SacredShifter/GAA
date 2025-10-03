@@ -21,7 +21,7 @@ export const CollectiveConsciousnessField: React.FC<CollectiveConsciousnessField
   const [intentionCategory, setIntentionCategory] = useState<string>('exploration');
   const [showAIPanel, setShowAIPanel] = useState(true);
   const [showBiometrics, setShowBiometrics] = useState(true);
-  const [controlsExpanded, setControlsExpanded] = useState(true);
+  const [controlsExpanded, setControlsExpanded] = useState(false);
   const [biometricsExpanded, setBiometricsExpanded] = useState(false);
   const [aiExpanded, setAiExpanded] = useState(false);
   const [intentionExpanded, setIntentionExpanded] = useState(false);
@@ -100,27 +100,39 @@ export const CollectiveConsciousnessField: React.FC<CollectiveConsciousnessField
           </button>
 
           {/* Left Panel - Status & Biometrics */}
-          <div className={`fixed md:absolute top-0 md:top-6 left-0 md:left-6 z-40 w-full md:w-auto h-full md:h-auto overflow-y-auto md:overflow-visible bg-black/95 md:bg-transparent p-4 md:p-0 space-y-4 transition-transform duration-300 ${
+          <div className={`fixed md:absolute top-0 md:top-6 left-0 md:left-6 z-40 w-full md:w-auto md:max-w-sm h-full md:h-auto overflow-y-auto md:overflow-visible bg-black/95 md:bg-transparent p-4 md:p-0 space-y-4 transition-transform duration-300 ${
             mobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'
           }`}>
             {/* Field Status Panel */}
             <div
-              className={`${theme === 'dark' ? 'bg-gray-900 bg-opacity-90' : 'bg-white bg-opacity-90'} backdrop-blur-sm rounded-2xl shadow-2xl border ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'} max-w-sm`}
+              className={`${theme === 'dark' ? 'bg-gray-900 bg-opacity-90' : 'bg-white bg-opacity-90'} backdrop-blur-sm rounded-2xl shadow-2xl border ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'} w-full md:w-80`}
             >
               <button
                 onClick={() => setControlsExpanded(!controlsExpanded)}
-                className="w-full flex items-center justify-between p-4 md:p-6 hover:bg-white/5 transition-colors rounded-t-2xl"
+                className="w-full flex items-center justify-between p-3 md:p-4 hover:bg-white/5 transition-colors rounded-2xl"
               >
-                <div className="flex items-center gap-3">
-                  <Network className="w-5 md:w-6 h-5 md:h-6 text-blue-400" />
-                  <h2 className={`text-lg md:text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                    Field Status
-                  </h2>
+                <div className="flex items-center gap-2 md:gap-3 flex-1">
+                  <Network className="w-4 md:w-5 h-4 md:h-5 text-blue-400 flex-shrink-0" />
+                  <div className="flex-1 text-left">
+                    <h2 className={`text-sm md:text-base font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                      Field Status
+                    </h2>
+                    {!controlsExpanded && (
+                      <div className="flex items-center gap-3 text-xs mt-0.5">
+                        <span className={`${cc.state.isActive ? 'text-green-400' : 'text-gray-400'}`}>
+                          {cc.state.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                        <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}>
+                          {cc.state.participantCount} users
+                        </span>
+                      </div>
+                    )}
+                  </div>
                 </div>
                 {controlsExpanded ? (
-                  <ChevronUp className="w-5 h-5 text-gray-400" />
+                  <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0" />
                 ) : (
-                  <ChevronDown className="w-5 h-5 text-gray-400" />
+                  <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
                 )}
               </button>
 
@@ -251,7 +263,7 @@ export const CollectiveConsciousnessField: React.FC<CollectiveConsciousnessField
             {/* Biometrics Panel */}
             {showBiometrics && cc.state.myBiometrics && (
               <div
-                className={`${theme === 'dark' ? 'bg-gray-900 bg-opacity-90' : 'bg-white bg-opacity-90'} backdrop-blur-sm rounded-2xl shadow-2xl border ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'} max-w-sm`}
+                className={`${theme === 'dark' ? 'bg-gray-900 bg-opacity-90' : 'bg-white bg-opacity-90'} backdrop-blur-sm rounded-2xl shadow-2xl border ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'} w-full md:w-80`}
               >
                 <button
                   onClick={() => setBiometricsExpanded(!biometricsExpanded)}
@@ -402,24 +414,24 @@ export const CollectiveConsciousnessField: React.FC<CollectiveConsciousnessField
           )}
 
           {/* Intention Panel - Bottom */}
-          <div className="fixed bottom-4 left-4 right-4 md:absolute md:bottom-6 md:left-6 md:right-6 z-10">
+          <div className="fixed bottom-4 left-4 right-4 md:absolute md:bottom-6 md:left-6 md:right-6 md:max-w-2xl md:mx-auto z-10">
             <div
               className={`${theme === 'dark' ? 'bg-gray-900 bg-opacity-90' : 'bg-white bg-opacity-90'} backdrop-blur-sm rounded-2xl shadow-2xl border ${theme === 'dark' ? 'border-gray-800' : 'border-gray-200'}`}
             >
               <button
                 onClick={() => setIntentionExpanded(!intentionExpanded)}
-                className="w-full flex items-center justify-between p-4 md:p-6 hover:bg-white/5 transition-colors rounded-t-2xl"
+                className="w-full flex items-center justify-between p-3 md:p-4 hover:bg-white/5 transition-colors rounded-2xl"
               >
-                <div className="flex items-center gap-3">
-                  <TrendingUp className="w-5 h-5 text-green-400" />
-                  <h3 className={`text-base md:text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                <div className="flex items-center gap-2 md:gap-3">
+                  <TrendingUp className="w-4 md:w-5 h-4 md:h-5 text-green-400" />
+                  <h3 className={`text-sm md:text-base font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                     Collective Intention
                   </h3>
                 </div>
                 {intentionExpanded ? (
-                  <ChevronUp className="w-5 h-5 text-gray-400" />
+                  <ChevronUp className="w-4 h-4 text-gray-400" />
                 ) : (
-                  <ChevronDown className="w-5 h-5 text-gray-400" />
+                  <ChevronDown className="w-4 h-4 text-gray-400" />
                 )}
               </button>
 
