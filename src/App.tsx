@@ -66,15 +66,12 @@ function App() {
         />
       )}
 
-      <div className="fixed top-6 left-6 z-50 flex gap-3">
-        <button
-          onClick={() => setShowAbout(true)}
-          className="p-3 bg-slate-900/95 backdrop-blur-lg border border-cyan-500/30 rounded-xl shadow-2xl hover:bg-slate-800 transition-all group"
-          title="About GAA"
-          aria-label="About GAA"
-        >
-          <Info className="w-6 h-6 text-cyan-400 group-hover:scale-110 transition-transform" />
-        </button>
+      <div className="fixed top-4 left-4 z-50 flex items-center gap-3">
+        <img
+          src="https://mikltjgbvxrxndtszorb.supabase.co/storage/v1/object/public/sacred-assets/uploads/Logo-MainSacredShifter-removebg-preview.png"
+          alt="Sacred Shifter"
+          className="h-12 w-auto invert opacity-80 hover:opacity-100 transition-opacity"
+        />
 
         <button
           onClick={cycleModes}
@@ -86,6 +83,15 @@ function App() {
           <span className="text-sm font-medium text-purple-300">
             {getModeLabel()}
           </span>
+        </button>
+
+        <button
+          onClick={() => setShowAbout(true)}
+          className="p-3 bg-slate-900/95 backdrop-blur-lg border border-cyan-500/30 rounded-xl shadow-2xl hover:bg-slate-800 transition-all group"
+          title="About GAA"
+          aria-label="About GAA"
+        >
+          <Info className="w-6 h-6 text-cyan-400 group-hover:scale-110 transition-transform" />
         </button>
       </div>
 
