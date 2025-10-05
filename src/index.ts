@@ -141,3 +141,20 @@ export { ValidationReport } from './components/ValidationReport';
 export type { ValidationReportProps } from './components/ValidationReport';
 
 export { runCompleteValidation, generateValidationCharts, exportValidationPDF } from './utils/runValidation';
+
+export { SonicGAAIntegration } from './utils/sonicGAAIntegration';
+export type {
+  SonicHarmonicData,
+  SonicEvent,
+  CoherenceFeedback,
+  CoherenceData,
+} from './utils/sonicGAAIntegration';
+
+export { useSonicIntegration } from './hooks/useSonicIntegration';
+export type {
+  UseSonicIntegrationOptions,
+  SonicIntegrationState,
+} from './hooks/useSonicIntegration';
+
+export { SonicIntegrationMonitor } from './components/SonicIntegrationMonitor';
+export type { SonicIntegrationMonitorProps } from './components/SonicIntegrationMonitor';
